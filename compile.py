@@ -19,7 +19,54 @@ def get_demo_4x4_weights():
     return (weights, biases)
 def generate_host_test_script(out_dir: Path, num_inputs: int, num_classes: int):
     script_path = out_dir / 'test_client.py'
-    content = f'''#!/usr/bin/env python3\n"""\nAuto-generated FPGA UART Test Client\nInput length: {num_inputs} bits, Number of classes: {num_classes}\n"""\n\nimport sys\nimport time\nimport re\nimport serial\n\nPORT = "/dev/ttyUSB1"\nBAUD = 115200\n\ndef test_inference(pattern_bits: str):\n    if len(pattern_bits) != {num_inputs}:\n        raise ValueError(f"Pattern must be exactly {num_inputs} bits long (got {{len(pattern_bits)}})")\n\n    print(f"Connecting to {{PORT}} @ {{BAUD}} baud...")\n    try:\n        ser = serial.Serial(PORT, BAUD, timeout=0.5)\n    except Exception as e:\n        print(f"Error opening serial port {{PORT}}: {{e}}")\n        return\n\n    ser.reset_input_buffer()\n    payload = (pattern_bits + "\\n").encode("ascii")\n    print(f"Sending ({{len(pattern_bits)}} bits): {{pattern_bits}}")\n    ser.write(payload)\n    ser.flush()\n\n    time.sleep(0.05)\n    resp = ser.read(ser.in_waiting or 64).decode("ascii", errors="replace").strip()\n    print(f"FPGA Raw Response: '{{resp}}'")\n\n    m = re.search(r"Class:\\s*(\\d+)\\s*\\(TTFS:\\s*(\\d+)\\)", resp)\n    if m:\n        c = int(m.group(1))\n        ttfs = int(m.group(2))\n        latency_ns = (ttfs + {num_inputs}) * (1000.0 / 27.0)\n        print(f"Prediction: Class {{c}} | TTFS: {{ttfs}} steps | Latency: ~{{latency_ns:.1f}} ns")\n    else:\n        print("Could not parse class/TTFS from response.")\n\n    ser.close()\n\nif __name__ == "__main__":\n    if len(sys.argv) > 1:\n        pattern = sys.argv[1]\n    else:\n        # Default test pattern (all ones)\n        pattern = "1" * {num_inputs}\n    test_inference(pattern)\n'''
+    content = f'''#!/usr/bin/env python3
+import sys
+import time
+import re
+import serial
+
+PORT = "/dev/ttyUSB1"
+BAUD = 115200
+
+def test_inference(pattern_bits: str):
+    if len(pattern_bits) != {num_inputs}:
+        raise ValueError(f"Pattern must be exactly {num_inputs} bits long (got {{len(pattern_bits)}})")
+
+    print(f"Connecting to {{PORT}} @ {{BAUD}} baud...")
+    try:
+        ser = serial.Serial(PORT, BAUD, timeout=0.5)
+    except Exception as e:
+        print(f"Error opening serial port {{PORT}}: {{e}}")
+        return
+
+    ser.reset_input_buffer()
+    payload = (pattern_bits + "\\n").encode("ascii")
+    print(f"Sending ({{len(pattern_bits)}} bits): {{pattern_bits}}")
+    ser.write(payload)
+    ser.flush()
+
+    time.sleep(0.05)
+    resp = ser.read(ser.in_waiting or 64).decode("ascii", errors="replace").strip()
+    print(f"FPGA Raw Response: '{{resp}}'")
+
+    m = re.search(r"Class:\\s*(\\d+)\\s*\\(TTFS:\\s*(\\d+)\\)", resp)
+    if m:
+        c = int(m.group(1))
+        ttfs = int(m.group(2))
+        latency_ns = (ttfs + {num_inputs}) * (1000.0 / 27.0)
+        print(f"Prediction: Class {{c}} | TTFS: {{ttfs}} steps | Latency: ~{{latency_ns:.1f}} ns")
+    else:
+        print("Could not parse class/TTFS from response.")
+
+    ser.close()
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        pattern = sys.argv[1]
+    else:
+        pattern = "1" * {num_inputs}
+    test_inference(pattern)
+'''
     with open(script_path, 'w') as f:
         f.write(content)
     script_path.chmod(493)

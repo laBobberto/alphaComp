@@ -74,3 +74,11 @@ The quantized weights will be exported to `weights/digits_mnist_28x28.json`.
 - Logic LUT4: 993 / 1152 cells (86.2%)
 - Flip-Flops (DFF): 277 / 864 registers (32.1%)
 - Multipliers (DSP): 0 / 0 blocks (0.0%)
+
+## Tang Mega 138K (GW5AST-138) Port
+
+Hardware support for Sipeed Tang Mega 138K (Tang Console SOM, Gowin GW5AST-LV138PG484AC1/I0) is available in the [`tang138k/`](tang138k/README.md) directory:
+- 50 MHz core clock
+- High-speed 2 Mbps CDC UART over Type-C `DEBUG|OTG` port
+- Full build scripts, pin constraints, test clients, and MNIST benchmark suite
+- Detailed instructions in [tang138k/README.md](tang138k/README.md)

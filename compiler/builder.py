@@ -30,7 +30,7 @@ class FPGABuilder:
         self.run_cmd(nextpnr_cmd, '2/3 NextPNR Place & Route')
         pack_cmd = ['gowin_pack', '-d', 'GW1NZ-1', '-o', str(bitstream_fs.name), str(pnr_json.name)]
         self.run_cmd(pack_cmd, '3/3 Gowin Pack')
-        print(f'\n🎉 Bitstream built successfully at: {bitstream_fs.resolve()}')
+        print(f'\nBitstream built successfully at: {bitstream_fs.resolve()}')
         return bitstream_fs
     def flash(self, bitstream_path: Path):
         print(f'\n===> Flashing to Tang Nano 1K...')
@@ -39,11 +39,11 @@ class FPGABuilder:
             res = subprocess.run(flash_cmd, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             print(res.stdout)
             if res.returncode == 0:
-                print('🎉 FPGA programmed successfully!')
+                print('FPGA programmed successfully!')
                 return True
             else:
-                print('⚠️  FPGA programming failed (board might not be plugged in).')
+                print('FPGA programming failed (board might not be plugged in).')
                 return False
         except Exception as e:
-            print(f'⚠️  Could not run openFPGALoader: {e}')
+            print(f'Could not run openFPGALoader: {e}')
             return False
